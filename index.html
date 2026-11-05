@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uji Kamera Absensi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f1f5f9;
+    }
+    .card {
+      max-width: 450px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+    }
+    video, canvas {
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+    button {
+      padding: 13px 20px;
+      margin: 8px;
+      border: 0;
+      border-radius: 8px;
+      background: #2463a6;
+      color: white;
+      font-size: 16px;
+    }
+    #status { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Uji Kamera Absensi</h2>
+    <p>UPTD Puskesmas Pada</p>
+
+    <button onclick="bukaKamera()">Aktifkan Kamera</button>
+    <video id="video" autoplay playsinline muted></video>
+    <button onclick="ambilFoto()">Ambil Foto</button>
+    <canvas id="canvas" hidden></canvas>
+    <p id="status">Kamera belum diaktifkan.</p>
+  </div>
+
+  <script>
+    let stream = null;
+
+    async function bukaKamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { facingMode: { ideal: "user" } }
+        });
+
+        document.getElementById("video").srcObject = stream;
+        document.getElementById("status").textContent =
+          "Kamera berhasil dibuka!";
+      } catch (error) {
+        document.getElementById("status").textContent =
+          "Gagal membuka kamera: " + error.name + " - " + error.message;
+      }
+    }
+
+    function ambilFoto() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+
+      if (!stream || !video.videoWidth) {
+        alert("Aktifkan kamera terlebih dahulu.");
+        return;
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+
+      canvas.hidden = false;
+      document.getElementById("status").textContent =
+        "Foto berhasil diambil!";
+    }
+  </script>
+</body>
+</html>
