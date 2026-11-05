@@ -4,85 +4,272 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Uji Kamera Absensi</title>
+  <title>Absensi Pegawai - UPTD Puskesmas Pada</title>
   <style>
+    * { box-sizing: border-box; }
+
     body {
+      margin: 0;
+      padding: 20px 12px;
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
       background: #f1f5f9;
+      color: #1e293b;
     }
+
     .card {
-      max-width: 450px;
+      max-width: 480px;
       margin: auto;
-      padding: 20px;
+      padding: 22px;
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
+      box-shadow: 0 4px 18px #00000012;
     }
-    video, canvas {
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h2 {
+      color: #1d5b91;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      margin: 0;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin: 18px 0 8px;
+      font-weight: bold;
+    }
+
+    select, button {
       width: 100%;
-      border-radius: 10px;
-      margin-top: 12px;
-    }
-    button {
-      padding: 13px 20px;
-      margin: 8px;
-      border: 0;
-      border-radius: 8px;
-      background: #2463a6;
-      color: white;
+      padding: 13px;
+      border-radius: 9px;
       font-size: 16px;
     }
-    #status { margin-top: 15px; }
+
+    select {
+      border: 1px solid #cbd5e1;
+      background: white;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .primary {
+      background: #2463a6;
+      color: white;
+    }
+
+    .secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .attendance {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .attendance button {
+      background: #e2e8f0;
+      color: #334155;
+      border: 2px solid transparent;
+    }
+
+    .attendance button.active {
+      background: #e0f2fe;
+      border-color: #2463a6;
+      color: #1d5b91;
+    }
+
+    video, canvas, .photo-preview {
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    video {
+      background: #0f172a;
+      min-height: 180px;
+    }
+
+    .status {
+      padding: 12px;
+      margin-top: 12px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .note {
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
-<body>
-  <div class="card">
-    <h2>Uji Kamera Absensi</h2>
-    <p>UPTD Puskesmas Pada</p>
 
-    <button onclick="bukaKamera()">Aktifkan Kamera</button>
+<body>
+  <main class="card">
+    <header>
+      <h2>ABSENSI PEGAWAI</h2>
+      <p>UPTD PUSKESMAS PADA</p>
+    </header>
+
+    <label for="nama">Nama Pegawai</label>
+    <select id="nama">
+      <option value="">Memuat daftar pegawai...</option>
+    </select>
+    <p class="note">Daftar pegawai aktif akan dihubungkan pada tahap berikutnya.</p>
+
+    <label>Jenis Kehadiran</label>
+    <div class="attendance">
+      <button type="button" id="datang"
+        onclick="pilihJenis('Datang Kerja')">Datang Kerja</button>
+      <button type="button" id="pulang"
+        onclick="pilihJenis('Pulang Kerja')">Pulang Kerja</button>
+    </div>
+
+    <label>Foto Selfie</label>
     <video id="video" autoplay playsinline muted></video>
-    <button onclick="ambilFoto()">Ambil Foto</button>
+    <button type="button" class="primary" onclick="bukaKamera()">
+      Aktifkan Kamera
+    </button>
+    <button type="button" class="secondary" onclick="ambilFoto()">
+      Ambil Foto
+    </button>
+    <button type="button" class="secondary" onclick="ulangFoto()">
+      Ulangi Foto
+    </button>
+
     <canvas id="canvas" hidden></canvas>
-    <p id="status">Kamera belum diaktifkan.</p>
-  </div>
+    <p id="fotoStatus" class="status">Foto belum diambil.</p>
+
+    <label>Lokasi GPS</label>
+    <button type="button" class="primary" onclick="ambilLokasi()">
+      Ambil Lokasi GPS
+    </button>
+    <p id="gpsStatus" class="status">Lokasi belum diperoleh.</p>
+
+    <button type="button" class="primary" disabled
+      title="Menunggu koneksi backend"
+      onclick="alert('Pengiriman akan diaktifkan setelah koneksi backend siap.')">
+      KIRIM ABSENSI
+    </button>
+
+    <p class="note">
+      Pengiriman absensi belum diaktifkan. Sistem sedang dalam tahap pengujian.
+    </p>
+  </main>
 
   <script>
     let stream = null;
+    let fotoDiambil = false;
+    let latitude = null;
+    let longitude = null;
+    let jenis = '';
+
+    function pilihJenis(value) {
+      jenis = value;
+      document.getElementById('datang').classList.toggle(
+        'active', value === 'Datang Kerja'
+      );
+      document.getElementById('pulang').classList.toggle(
+        'active', value === 'Pulang Kerja'
+      );
+    }
 
     async function bukaKamera() {
       try {
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Browser tidak mendukung akses kamera.');
+        }
+
         stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
-          video: { facingMode: { ideal: "user" } }
+          video: { facingMode: { ideal: 'user' } }
         });
 
-        document.getElementById("video").srcObject = stream;
-        document.getElementById("status").textContent =
-          "Kamera berhasil dibuka!";
+        document.getElementById('video').srcObject = stream;
+        document.getElementById('fotoStatus').textContent =
+          'Kamera berhasil dibuka. Silakan ambil foto.';
       } catch (error) {
-        document.getElementById("status").textContent =
-          "Gagal membuka kamera: " + error.name + " - " + error.message;
+        document.getElementById('fotoStatus').textContent =
+          'Kamera gagal dibuka: ' + error.message;
       }
     }
 
     function ambilFoto() {
-      const video = document.getElementById("video");
-      const canvas = document.getElementById("canvas");
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
 
       if (!stream || !video.videoWidth) {
-        alert("Aktifkan kamera terlebih dahulu.");
+        alert('Aktifkan kamera terlebih dahulu.');
         return;
       }
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      canvas.getContext("2d").drawImage(video, 0, 0);
+      canvas.getContext('2d').drawImage(video, 0, 0);
 
       canvas.hidden = false;
-      document.getElementById("status").textContent =
-        "Foto berhasil diambil!";
+      fotoDiambil = true;
+
+      document.getElementById('fotoStatus').textContent =
+        'Foto berhasil diambil!';
+    }
+
+    function ulangFoto() {
+      const canvas = document.getElementById('canvas');
+      canvas.hidden = true;
+      fotoDiambil = false;
+      document.getElementById('fotoStatus').textContent =
+        'Silakan ambil foto kembali.';
+    }
+
+    function ambilLokasi() {
+      const status = document.getElementById('gpsStatus');
+
+      if (!navigator.geolocation) {
+        status.textContent = 'Browser tidak mendukung GPS.';
+        return;
+      }
+
+      status.textContent = 'Sedang mengambil lokasi...';
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          latitude = position.coords.latitude;
+          longitude = position.coords.longitude;
+          status.textContent =
+            'Lokasi berhasil diperoleh. Akurasi sekitar ' +
+            Math.round(position.coords.accuracy) + ' meter.';
+        },
+        error => {
+          status.textContent =
+            'Lokasi gagal diperoleh: ' + error.message;
+        },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      );
     }
   </script>
 </body>
