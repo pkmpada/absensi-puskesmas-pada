@@ -135,9 +135,9 @@
     </header>
 
     <label for="nama">Nama Pegawai</label>
-    <select id="nama">
-      <option value="">Memuat daftar pegawai...</option>
-    </select>
+  <select id="nama" required>
+  <option value="">Memuat daftar pegawai...</option>
+</select>
     <p class="note">Daftar pegawai aktif akan dihubungkan pada tahap berikutnya.</p>
 
     <label>Jenis Kehadiran</label>
@@ -271,6 +271,47 @@
         { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
       );
     }
+// Mengambil daftar pegawai aktif dari Google Apps Script
+function loadEmployees() {
+  const select = document.getElementById('nama');
+
+  select.innerHTML =
+    '<option value="">Memuat daftar pegawai...</option>';
+
+  window.terimaDaftarPegawai = function(data) {
+    if (!data || !data.success || !Array.isArray(data.names)) {
+      select.innerHTML =
+        '<option value="">Gagal memuat daftar pegawai</option>';
+      return;
+    }
+
+    select.innerHTML =
+      '<option value="">-- Pilih Nama Pegawai --</option>';
+
+    data.names.forEach(nama => {
+      const option = document.createElement('option');
+      option.value = nama;
+      option.textContent = nama;
+      select.appendChild(option);
+    });
+  };
+
+  const script = document.createElement('script');
+
+  script.src =
+    'https://script.google.com/macros/s/AKfycbz4x7eFkDGQvGdOiYqHwkQunfD20V6CnqpnqxJZyFLYBroVeAt754Ayyj05ZKuyUEDsRA/exec?callback=terimaDaftarPegawai';
+
+  script.onerror = function() {
+    select.innerHTML =
+      '<option value="">Koneksi gagal. Muat ulang halaman.</option>';
+  };
+
+  document.body.appendChild(script);
+}
+
+// Jalankan saat halaman dibuka
+loadEmployees();
+
   </script>
 </body>
 </html>
