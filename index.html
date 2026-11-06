@@ -311,6 +311,57 @@ function loadEmployees() {
   document.body.appendChild(script);
 }
 
+ // Mengirim absensi ke Google Apps Script
+function kirimAbsensi() {
+  const nama = document.getElementById('nama').value;
+  const jenis = document.getElementById('jenis').value;
+  const btn = document.getElementById('submitBtn');
+
+  if (!nama || !jenis) {
+    pesan('Silakan pilih nama dan jenis kehadiran.', false);
+    return;
+  }
+
+  if (latitude === null || longitude === null) {
+    pesan('Lokasi GPS wajib diperoleh terlebih dahulu.', false);
+    return;
+  }
+
+  if (!foto) {
+    pesan('Silakan ambil foto selfie langsung.', false);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Mengirim absensi...';
+
+  const data = {
+    nama: nama,
+    jenis: jenis,
+    latitude: latitude,
+    longitude: longitude,
+    foto: foto
+  };
+
+  fetch('https://script.google.com/macros/s/AKfycbz4x7eFkDGQvGdOiYqHwkQunfD20V6CnqpnqxJZyFLYBroVeAt754Ayyj05ZKuyUEDsRA/exec', {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify(data)
+  })
+  .then(function() {
+    pesan('Permintaan dikirim. Periksa Google Sheets untuk memastikan data tersimpan.', true);
+    btn.textContent = 'PERMINTAAN TERKIRIM';
+    hentikanKamera();
+  })
+  .catch(function(error) {
+    pesan('Pengiriman gagal: ' + error.message, false);
+    btn.disabled = false;
+    btn.textContent = 'KIRIM ABSENSI';
+  });
+}   
 // Jalankan saat halaman dibuka
 loadEmployees();
 
