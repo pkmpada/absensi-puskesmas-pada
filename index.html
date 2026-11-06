@@ -169,11 +169,13 @@
     </button>
     <p id="gpsStatus" class="status">Lokasi belum diperoleh.</p>
 
-    <button type="button" class="primary" disabled
-      title="Menunggu koneksi backend"
-      onclick="alert('Pengiriman akan diaktifkan setelah koneksi backend siap.')">
-      KIRIM ABSENSI
-    </button>
+    <button
+  type="button"
+  class="primary"
+  id="submitBtn"
+  onclick="kirimAbsensi()">
+  KIRIM ABSENSI
+</button>
 
     <p class="note">
       Pengiriman absensi belum diaktifkan. Sistem sedang dalam tahap pengujian.
