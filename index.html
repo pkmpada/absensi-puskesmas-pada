@@ -327,7 +327,7 @@ function kirimAbsensi() {
     return;
   }
 
-  if (!foto) {
+ if (!fotoDiambil) {
     pesan('Silakan ambil foto selfie langsung.', false);
     return;
   }
@@ -335,6 +335,9 @@ function kirimAbsensi() {
   btn.disabled = true;
   btn.textContent = 'Mengirim absensi...';
 
+const canvas = document.getElementById('canvas');
+const foto = canvas.toDataURL('image/jpeg', 0.8);
+  
   const data = {
     nama: nama,
     jenis: jenis,
