@@ -251,6 +251,15 @@
         'Silakan ambil foto kembali.';
     }
 
+function hentikanKamera() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+
+  document.getElementById('video').srcObject = null;
+}
+
     function ambilLokasi() {
       const status = document.getElementById('gpsStatus');
 
